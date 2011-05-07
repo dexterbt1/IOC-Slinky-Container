@@ -1,14 +1,14 @@
 package Slinky::Container;
 use strict;
-use Slinky::Item::Ref;
-use Slinky::Item::Literal;
+use Slinky::Container::Item::Ref;
+use Slinky::Container::Item::Literal;
 use Moose;
 use Data::Dumper;
 use Carp ();
 
 has 'config'    => ( is => 'rw', isa => 'HashRef', trigger => \&_init_objects );
 has 'typeof'    => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { { } } );
-has 'objects'   => ( is => 'rw', isa => 'HashRef[Slinky::Item]', lazy => 1, default => sub { { } } );
+has 'objects'   => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { { } } );
 
 sub _init_objects {
     my ($self, $conf) = @_;
@@ -32,7 +32,7 @@ sub _wire_object {
         if (ref($v) eq 'HASH') {
             if (exists $v->{'_ref'}) {
                 # reference to existing types
-                $oinst = tie $_[1], 'Slinky::Item::Ref', $self, $v->{'_ref'};
+                $oinst = tie $_[1], 'Slinky::Container::Item::Ref', $self, $v->{'_ref'};
             }
             else {
                 # plain hashref ... traverse first
@@ -45,7 +45,7 @@ sub _wire_object {
                     $href->{$hk} = $v->{$hk};
                     $self->_wire_object($v->{$hk});
                 }
-                $oinst = tie $v, 'Slinky::Item::Literal', $href;
+                $oinst = tie $v, 'Slinky::Container::Item::Literal', $href;
             }
         }
         elsif (ref($v) eq 'ARRAY') {
@@ -54,16 +54,16 @@ sub _wire_object {
             for(0..$count) {
                 $self->_wire_object($v->[$_]);
             }
-            $oinst = tie $v, 'Slinky::Item::Literal', $v;
+            $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
         }
         else {
             # other ref types
-            $oinst = tie $v, 'Slinky::Item::Literal', $v;
+            $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
         }
     }
     else {
         # literal
-        $oinst = tie $v, 'Slinky::Item::Literal', $v;
+        $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
     }
 
     if (scalar @k_aliases) {

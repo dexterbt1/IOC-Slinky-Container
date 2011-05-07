@@ -1,4 +1,4 @@
-package Slinky::Item::Literal;
+package Slinky::Container::Item::Literal;
 use strict;
 use Scalar::Util qw/weaken refaddr/;
 
