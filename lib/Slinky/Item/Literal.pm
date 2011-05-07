@@ -1,15 +1,25 @@
 package Slinky::Item::Literal;
 use strict;
-use Moose;
-use Slinky::Item;
+use Scalar::Util qw/weaken refaddr/;
 
-with 'Slinky::Item';
+my $VALUES = { };
 
-has 'value' => ( is => 'rw', isa => 'Any', required => 1 );
+sub TIESCALAR {
+    my ($class, $value) = @_;
+    my $scalar = '';
+    my $self = bless(\$scalar, $class);
+    $VALUES->{refaddr($self)} = $value;
+    return $self;
+}
 
-sub get {
+sub FETCH {
     my ($self) = @_;
-    return $self->value;
+    return $VALUES->{refaddr($self)};
+}
+
+sub DESTROY {
+    my ($self) = @_;
+    delete $VALUES->{refaddr($self)};
 }
 
 1;

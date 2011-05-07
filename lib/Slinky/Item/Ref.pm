@@ -1,15 +1,31 @@
 package Slinky::Item::Ref;
 use strict;
-use Moose;
-use Slinky::Item;
+use Scalar::Util qw/weaken refaddr/;
 
-with 'Slinky::Item';
+my $CONTAINERS = { };
+my $REF_KEYS = { };
 
-has 'ref_key' => ( is => 'rw', isa => 'Str', required => 1 );
+sub TIESCALAR {
+    my ($class, $container, $ref_key) = @_;
+    my $scalar = '';
+    my $self = bless(\$scalar, $class);
+    $REF_KEYS->{refaddr($self)} = $ref_key;
+    weaken $container;
+    $CONTAINERS->{refaddr($self)} = $container;
+    return $self;
+}
 
-sub get {
+sub FETCH {
     my ($self) = @_;
-    return $self->parent_container->lookup($self->ref_key);
+    #print STDERR $self . ": FETCH()d\n";
+    my $ref_key = $REF_KEYS->{refaddr($self)};
+    return $CONTAINERS->{refaddr($self)}->lookup($ref_key);
+}
+
+sub DESTROY {
+    my ($self) = @_;
+    delete $REF_KEYS->{refaddr($self)};
+    delete $CONTAINERS->{refaddr($self)};
 }
 
 1;
