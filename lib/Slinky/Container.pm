@@ -2,21 +2,21 @@ package Slinky::Container;
 use strict;
 use Slinky::Container::Item::Ref;
 use Slinky::Container::Item::Literal;
+use Slinky::Container::Item::Constructed;
 use Moose;
 use Data::Dumper;
 use Carp ();
 
 has 'config'    => ( is => 'rw', isa => 'HashRef', trigger => \&_init_objects );
 has 'typeof'    => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { { } } );
-has 'objects'   => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { { } } );
 
 sub _init_objects {
     my ($self, $conf) = @_;
-    (exists $conf->{'components'})
-        or Carp::croak("Expected 'components' key");
-    my $components = delete $conf->{'components'};
-    foreach my $k (keys %$components) {
-        my $v = delete $components->{$k};
+    (exists $conf->{'container'})
+        or Carp::croak("Expected 'container' key");
+    my $container = delete $conf->{'container'};
+    foreach my $k (keys %$container) {
+        my $v = delete $container->{$k};
         $self->_wire_object($v, $k);
     }
 }
@@ -33,6 +33,18 @@ sub _wire_object {
             if (exists $v->{'_ref'}) {
                 # reference to existing types
                 $oinst = tie $_[1], 'Slinky::Container::Item::Ref', $self, $v->{'_ref'};
+            }
+            elsif (exists $v->{'_constructor'}) {
+                # object!
+                my $ns = delete $v->{'_constructor'};
+                my $new = delete $v->{'_constructor_method'} || 'new';
+                my $args = delete $v->{'_constructor_args'} || [ ];
+                my $singleton = 1;
+                if (exists $v->{'_singleton'}) {
+                    $singleton = delete $v->{'_singleton'};
+                }
+                $self->_wire_object($args);
+                $oinst = Slinky::Container::Item::Constructed->new($ns, $new, $args, $singleton);
             }
             else {
                 # plain hashref ... traverse first
@@ -69,7 +81,6 @@ sub _wire_object {
     if (scalar @k_aliases) {
         foreach my $ok (@k_aliases) {
             $self->typeof->{$ok} = $oinst;
-            $self->objects->{$ok} = $_[1];
         }
     }
     return $v;

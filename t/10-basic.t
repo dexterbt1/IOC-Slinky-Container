@@ -14,7 +14,7 @@ my $o;
 
 $conf = <<YML;
 ---
-components:
+container:
     somenull: ~ 
     greeting: "Hello World"
     greeting2: "Aloha"
@@ -42,6 +42,7 @@ components:
         hashref: 1
         but_with_id: 1
         _lookup_id: "hrefx"
+
 YML
 
 dies_ok { $c = Slinky::Container->new( config => { } ); } 'no components';
