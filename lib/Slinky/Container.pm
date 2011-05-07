@@ -38,13 +38,19 @@ sub _wire_object {
                 # object!
                 my $ns = delete $v->{'_constructor'};
                 my $new = delete $v->{'_constructor_method'} || 'new';
-                my $args = delete $v->{'_constructor_args'} || [ ];
+                my $ctor = delete $v->{'_constructor_args'} || [ ];
+
                 my $singleton = 1;
                 if (exists $v->{'_singleton'}) {
                     $singleton = delete $v->{'_singleton'};
                 }
-                $self->_wire_object($args);
-                $oinst = Slinky::Container::Item::Constructed->new($ns, $new, $args, $singleton);
+                $self->_wire_object($ctor);
+
+                my $alias = delete $v->{'_lookup_id'};
+                if (defined $alias) {
+                    push @k_aliases, $alias;
+                }
+                $oinst = tie $_[1], 'Slinky::Container::Item::Constructed', $self, $ns, $new, $ctor, $v, $singleton;
             }
             else {
                 # plain hashref ... traverse first

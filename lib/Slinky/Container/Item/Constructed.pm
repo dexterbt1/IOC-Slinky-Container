@@ -1,24 +1,59 @@
 package Slinky::Container::Item::Constructed;
 use strict;
+use Class::Load qw/load_class/;
 use Scalar::Util qw/weaken refaddr/;
 
-sub new {
-    my ($class, $ns, $new, $args, $singleton) = @_;
-    my $self = [ { }, $ns, $new, $args, $singleton ];
-    bless($self, $class);
+my $SPEC = { };
+
+
+sub TIESCALAR {
+    my ($class, $container, $ns, $new, $ctor, $setter, $singleton) = @_;
+    my $scalar = '';
+    my $self = bless(\$scalar, $class);
+    $SPEC->{refaddr($self)} = [ { }, $container, $ns, $new, $ctor, $setter, $singleton ];
     return $self;
 }
 
 sub FETCH {
     my ($self) = @_;
-    my ($tmp, $ns, $new, $args, $singleton) = @$self;
+    my $spec = $SPEC->{refaddr($self)};
+    my ($tmp, $container, $ns, $new, $ctor, $setter, $singleton) = @$spec;
     if ($singleton) {
+        # short circuit the process
         if (exists $tmp->{last_inst}) {
             return $tmp->{last_inst};
         }
     }
-    $tmp->{last_inst} = $ns->$new(@$args);
+    # class loader
+    load_class($ns);
+    
+    # constructor
+    # -----------
+    if (ref($ctor) eq 'HASH') {
+        # pass as hash
+        $tmp->{last_inst} = $ns->$new(%$ctor);
+    }
+    elsif (ref($ctor) eq 'ARRAY') {
+        # pass as list
+        $tmp->{last_inst} = $ns->$new(@$ctor);
+    }
+    else {
+        # pass as scalar
+        $tmp->{last_inst} = $ns->$new($ctor);
+    }
+    # set setter args
+    # ---------------
+    while (my ($k,$v) = each(%$setter)) {
+        $container->_wire_object($v);
+        $tmp->{last_inst}->$k($v);
+    }
     return $tmp->{last_inst};
+}
+
+
+sub DESTROY {
+    my ($self) = @_;
+    delete $SPEC->{refaddr($self)};
 }
 
 1;
