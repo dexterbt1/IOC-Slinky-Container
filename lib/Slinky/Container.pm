@@ -24,16 +24,24 @@ sub _init_objects {
 sub _wire_object {
     my ($self, $v, $k) = @_;
     my $oinst;
+    my @k_aliases = ();
+    if (defined $k) {
+        push @k_aliases, $k
+    }
     if (ref($v)) {
         if (ref($v) eq 'HASH') {
-            if (exists $v->{'ref'}) {
+            if (exists $v->{'_ref'}) {
                 # reference to existing types
-                $oinst = tie $_[1], 'Slinky::Item::Ref', $self, $v->{'ref'};
+                $oinst = tie $_[1], 'Slinky::Item::Ref', $self, $v->{'_ref'};
             }
             else {
                 # plain hashref ... traverse first
                 my $href = { };
                 foreach my $hk (keys %$v) {
+                    if ($hk eq '_lookup_id') {
+                        push @k_aliases, delete($v->{$hk});
+                        next;
+                    }
                     $href->{$hk} = $v->{$hk};
                     $self->_wire_object($v->{$hk});
                 }
@@ -58,9 +66,11 @@ sub _wire_object {
         $oinst = tie $v, 'Slinky::Item::Literal', $v;
     }
 
-    if (defined $k) {
-        $self->typeof->{$k} = $oinst;
-        $self->objects->{$k} = $_[1];
+    if (scalar @k_aliases) {
+        foreach my $ok (@k_aliases) {
+            $self->typeof->{$ok} = $oinst;
+            $self->objects->{$ok} = $_[1];
+        }
     }
     return $v;
 }

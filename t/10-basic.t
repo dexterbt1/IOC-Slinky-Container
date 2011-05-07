@@ -25,17 +25,23 @@ components:
     aref1:
         - 1
         - "abc"
-    ptr1: { ref: "greeting" }
+    ptr1: { _ref: "greeting" }
 
     href2:
         this2:
             is2:
-                nested2: { ref: "digits" }
+                nested2: { _ref: "digits" }
 
     aref2:
         - 1
-        - { ref: "greeting2" }
-    ptr2: { ref: "ptr1" }
+        - { _ref: "greeting2" }
+    ptr2: { _ref: "ptr1" }
+
+    href3:
+        another: 1
+        hashref: 1
+        but_with_id: 1
+        _lookup_id: "hrefx"
 YML
 
 dies_ok { $c = Slinky::Container->new( config => { } ); } 'no components';
@@ -60,6 +66,8 @@ is_deeply $c->lookup('aref2'), [ 1, 'Aloha' ], 'deep-aref2';
 
 is $c->lookup('ptr2'), $c->lookup('ptr1'), 'ptr2-to-ptr1';
 is $c->lookup('ptr2'), $c->lookup('greeting'), 'ptr2-to-greeting';
+
+is $c->lookup('hrefx'), $c->lookup('href3'), 'alias';
 
 
 pass "last";
