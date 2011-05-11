@@ -12,7 +12,6 @@ BEGIN {
     plan qw/no_plan/;
 
     use_ok 'Slinky::Container';
-    use_ok 'YAML';
 }
 
 my $conf;
@@ -20,41 +19,45 @@ my $c;
 my $o;
 my $p;
 
-$conf = <<YML;
----
-container:
-    db_dsn: "DBI:SQLite:dbname=:memory:"
-    db_user: ""
-    db_pass: ""
-    dbh1:
-        _class: "DBI" 
-        _constructor: "connect"
-        _constructor_args:
-            - { _ref: "db_dsn" }
-            - { _ref: "db_user" }
-            - { _ref: "db_pass" }
-            - { RaiseError: 1 }
-    dbh2:
-        _singleton: 0
-        _class: "DBI" 
-        _constructor: "connect"
-        _constructor_args:
-            - { _ref: "db_dsn" }
-            - { _ref: "db_user" }
-            - { _ref: "db_pass" }
-            - { RaiseError: 1 }
+$conf = {
+    container => {
+        db_dsn      => "DBI:SQLite:dbname=:memory:",
+        db_user     => "",
+        db_pass     => "",
+        dbh1 => {
+            _class              => "DBI" ,
+            _constructor        => "connect",
+            _constructor_args   => [
+                { _ref => "db_dsn" },
+                { _ref => "db_user" },
+                { _ref => "db_pass" },
+                { RaiseError => 1 },
+            ],
+        },
+        dbh2 => {
+            _singleton          => 0,
+            _class              => "DBI",
+            _constructor        => "connect",
+            _constructor_args   => [
+                { _ref => "db_dsn" },
+                { _ref => "db_user" },
+                { _ref => "db_pass" },
+                { RaiseError => 1 },
+            ],
+        },
+        ptr1 => { _ref => 'dbh1' },
+        aref1 => [
+            1,
+            2,
+            'nested_href_here' => {
+                hello => 'world',
+                some_dbh_ref => { _ref => 'dbh1' },
+            },
+        ],
+    },
+};
 
-    ptr1: { _ref: dbh1 }
-    aref1:
-        - 1
-        - 2
-        - nested_href_here:
-          hello: world
-          some_dbh_ref: { _ref: dbh1 }
-            
-YML
-
-$c = Slinky::Container->new( config => Load($conf) );
+$c = Slinky::Container->new( config => $conf );
 
 # singleton
 $o = $c->lookup('dbh1');

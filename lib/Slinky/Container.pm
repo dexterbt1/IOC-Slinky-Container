@@ -117,6 +117,28 @@ __END__
 
 =head1 NAME
 
-Slinky::Container - 
+Slinky::Container - an alternative dependency-injection container
+
+=head1 SYNOPSIS
+
+    use Slinky::Container;
+    use YAML;
+
+
+=head1 DESCRIPTION
+
+=head1 SEE ALSO
+
+L<Bread::Broad> - a Moose-based DI framework
+
+L<IOC> - the ancestor of L<Bread::Board>
+
+L<http://en.wikipedia.org/wiki/Dependency_Injection>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2011 by Dexter B. Tad-y
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
