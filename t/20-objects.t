@@ -32,39 +32,39 @@ $conf = <<YML;
 ---
 container:
     some_item:
-        _constructor: "Item"
+        _class: "Item"
     generic_car:
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Generic"
     vios1:
         _lookup_id: "somevios"
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Toyota"
         type: "Sedan"
         model: "Vios"
         year: 2011
     nested_ctor:
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Test"
             test_item:
-                _constructor: "Item"
+                _class: "Item"
     ref_ctor:
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Test"
             test_item: { _ref: some_item }
     setter_ctor:
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Test"
         test_item:
-            _constructor: "Item"
+            _class: "Item"
 
     ref_setter:
-        _constructor: "Car"
+        _class: "Car"
         _constructor_args:
             brand: "Test"
         test_item: { _ref: some_item }

@@ -27,8 +27,8 @@ container:
     db_user: ""
     db_pass: ""
     dbh1:
-        _constructor: "DBI" 
-        _constructor_method: "connect"
+        _class: "DBI" 
+        _constructor: "connect"
         _constructor_args:
             - { _ref: "db_dsn" }
             - { _ref: "db_user" }
@@ -36,8 +36,8 @@ container:
             - { RaiseError: 1 }
     dbh2:
         _singleton: 0
-        _constructor: "DBI" 
-        _constructor_method: "connect"
+        _class: "DBI" 
+        _constructor: "connect"
         _constructor_args:
             - { _ref: "db_dsn" }
             - { _ref: "db_user" }

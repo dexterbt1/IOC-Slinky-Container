@@ -34,10 +34,10 @@ sub _wire_object {
                 # reference to existing types
                 $oinst = tie $_[1], 'Slinky::Container::Item::Ref', $self, $v->{'_ref'};
             }
-            elsif (exists $v->{'_constructor'}) {
+            elsif (exists $v->{'_class'}) {
                 # object!
-                my $ns = delete $v->{'_constructor'};
-                my $new = delete $v->{'_constructor_method'} || 'new';
+                my $ns = delete $v->{'_class'};
+                my $new = delete $v->{'_constructor'} || 'new';
                 my $ctor = delete $v->{'_constructor_args'} || [ ];
 
                 my $singleton = 1;
