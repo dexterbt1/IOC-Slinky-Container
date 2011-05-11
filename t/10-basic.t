@@ -42,6 +42,14 @@ container:
         hashref: 1
         but_with_id: 1
         _lookup_id: "hrefx"
+        z: { _ref: 'hrefz' }
+
+    href4:
+        some:
+            nested:
+                a: 1
+                b: 2
+                _lookup_id: "hrefz"
 
 YML
 
@@ -69,6 +77,10 @@ is $c->lookup('ptr2'), $c->lookup('ptr1'), 'ptr2-to-ptr1';
 is $c->lookup('ptr2'), $c->lookup('greeting'), 'ptr2-to-greeting';
 
 is $c->lookup('hrefx'), $c->lookup('href3'), 'alias';
+
+is_deeply $c->lookup('hrefz'), { a => 1, b => 2 }, 'nested-alias';
+
+is $c->lookup('hrefx')->{'z'}, $c->lookup('hrefz'), 'z-alias';
 
 
 pass "last";

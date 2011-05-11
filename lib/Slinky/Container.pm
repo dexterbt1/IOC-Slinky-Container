@@ -54,16 +54,14 @@ sub _wire_object {
             }
             else {
                 # plain hashref ... traverse first
-                my $href = { };
                 foreach my $hk (keys %$v) {
                     if ($hk eq '_lookup_id') {
                         push @k_aliases, delete($v->{$hk});
                         next;
                     }
-                    $href->{$hk} = $v->{$hk};
                     $self->_wire_object($v->{$hk});
                 }
-                $oinst = tie $v, 'Slinky::Container::Item::Literal', $href;
+                $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
             }
         }
         elsif (ref($v) eq 'ARRAY') {
