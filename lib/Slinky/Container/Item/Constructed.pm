@@ -44,7 +44,7 @@ sub FETCH {
     # set setter args
     # ---------------
     while (my ($k,$v) = each(%$setter)) {
-        $container->_wire_object($v);
+        $container->wire($v);
         $tmp->{last_inst}->$k($v);
     }
     return $tmp->{last_inst};

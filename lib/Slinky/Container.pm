@@ -3,25 +3,36 @@ use strict;
 use Slinky::Container::Item::Ref;
 use Slinky::Container::Item::Literal;
 use Slinky::Container::Item::Constructed;
-use Moose;
-use Data::Dumper;
 use Carp ();
 
-has 'config'    => ( is => 'rw', isa => 'HashRef', trigger => \&_init_objects );
-has 'typeof'    => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { { } } );
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless { }, $class;
+    $self->{typeof} = { };
+    if (exists $args{config}) {
+        $self->configure( delete $args{config} );
+    }
+    $self;
+}
 
-sub _init_objects {
+sub typeof { 
+    $_[0]->{typeof};
+}
+
+sub configure {
     my ($self, $conf) = @_;
+    (ref($conf) eq 'HASH')
+        or Carp::croak("Expected 'container' key as hash reference");
     (exists $conf->{'container'})
         or Carp::croak("Expected 'container' key");
     my $container = delete $conf->{'container'};
     foreach my $k (keys %$container) {
         my $v = delete $container->{$k};
-        $self->_wire_object($v, $k);
+        $self->wire($v, $k);
     }
 }
 
-sub _wire_object {
+sub wire {
     my ($self, $v, $k) = @_;
     my $oinst;
     my @k_aliases = ();
@@ -44,7 +55,7 @@ sub _wire_object {
                 if (exists $v->{'_singleton'}) {
                     $singleton = delete $v->{'_singleton'};
                 }
-                $self->_wire_object($ctor);
+                $self->wire($ctor);
 
                 my $alias = delete $v->{'_lookup_id'};
                 if (defined $alias) {
@@ -59,7 +70,7 @@ sub _wire_object {
                         push @k_aliases, delete($v->{$hk});
                         next;
                     }
-                    $self->_wire_object($v->{$hk});
+                    $self->wire($v->{$hk});
                 }
                 $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
             }
@@ -68,7 +79,7 @@ sub _wire_object {
             # arrayref are to be traversed for refs
             my $count = scalar(@$v)-1;
             for(0..$count) {
-                $self->_wire_object($v->[$_]);
+                $self->wire($v->[$_]);
             }
             $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
         }
@@ -100,8 +111,12 @@ sub lookup {
 }
 
 
-__PACKAGE__->meta->make_immutable;
-
 1;
 
 __END__
+
+=head1 NAME
+
+Slinky::Container - 
+
+
