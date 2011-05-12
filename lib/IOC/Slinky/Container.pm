@@ -1,8 +1,8 @@
-package Slinky::Container;
+package IOC::Slinky::Container;
 use strict;
-use Slinky::Container::Item::Ref;
-use Slinky::Container::Item::Literal;
-use Slinky::Container::Item::Constructed;
+use IOC::Slinky::Container::Item::Ref;
+use IOC::Slinky::Container::Item::Literal;
+use IOC::Slinky::Container::Item::Constructed;
 use Carp ();
 
 sub new {
@@ -43,7 +43,7 @@ sub wire {
         if (ref($v) eq 'HASH') {
             if (exists $v->{'_ref'}) {
                 # reference to existing types
-                $oinst = tie $_[1], 'Slinky::Container::Item::Ref', $self, $v->{'_ref'};
+                $oinst = tie $_[1], 'IOC::Slinky::Container::Item::Ref', $self, $v->{'_ref'};
             }
             elsif (exists $v->{'_class'}) {
                 # object!
@@ -61,7 +61,7 @@ sub wire {
                 if (defined $alias) {
                     push @k_aliases, $alias;
                 }
-                $oinst = tie $_[1], 'Slinky::Container::Item::Constructed', $self, $ns, $new, $ctor, $v, $singleton;
+                $oinst = tie $_[1], 'IOC::Slinky::Container::Item::Constructed', $self, $ns, $new, $ctor, $v, $singleton;
             }
             else {
                 # plain hashref ... traverse first
@@ -72,7 +72,7 @@ sub wire {
                     }
                     $self->wire($v->{$hk});
                 }
-                $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
+                $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
             }
         }
         elsif (ref($v) eq 'ARRAY') {
@@ -81,16 +81,16 @@ sub wire {
             for(0..$count) {
                 $self->wire($v->[$_]);
             }
-            $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
+            $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
         }
         else {
             # other ref types
-            $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
+            $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
         }
     }
     else {
         # literal
-        $oinst = tie $v, 'Slinky::Container::Item::Literal', $v;
+        $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
     }
 
     if (scalar @k_aliases) {
@@ -117,11 +117,11 @@ __END__
 
 =head1 NAME
 
-Slinky::Container - an alternative dependency-injection container
+IOC::Slinky::Container - an alternative dependency-injection container
 
 =head1 SYNOPSIS
 
-    use Slinky::Container;
+    use IOC::Slinky::Container;
     use YAML;
 
 

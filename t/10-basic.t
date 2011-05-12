@@ -4,7 +4,7 @@ use Test::Exception;
 use Scalar::Util qw/refaddr/;
 
 BEGIN {
-    use_ok 'Slinky::Container';
+    use_ok 'IOC::Slinky::Container';
     use_ok 'YAML';
 }
 
@@ -53,9 +53,9 @@ container:
 
 YML
 
-dies_ok { $c = Slinky::Container->new( config => { } ); } 'no components';
+dies_ok { $c = IOC::Slinky::Container->new( config => { } ); } 'no components';
 
-$c = Slinky::Container->new( config => Load($conf) );
+$c = IOC::Slinky::Container->new( config => Load($conf) );
 
 ok not(defined $c->lookup()), 'non-existent lookup';
 ok not(defined $c->lookup('')), 'non-existent lookup';

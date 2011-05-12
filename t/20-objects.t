@@ -19,7 +19,7 @@ use Test::More qw/no_plan/;
 use Test::Exception;
 
 BEGIN {
-    use_ok 'Slinky::Container';
+    use_ok 'IOC::Slinky::Container';
     use_ok 'YAML';
 }
 
@@ -71,7 +71,7 @@ container:
             
 YML
 
-$c = Slinky::Container->new( config => Load($conf) );
+$c = IOC::Slinky::Container->new( config => Load($conf) );
 
 # minimal
 isa_ok $c->lookup('some_item'), 'Item';

@@ -1,4 +1,4 @@
-package Slinky::Container::Item::Constructed;
+package IOC::Slinky::Container::Item::Constructed;
 use strict;
 use Class::Load qw/load_class/;
 use Scalar::Util qw/weaken refaddr/;

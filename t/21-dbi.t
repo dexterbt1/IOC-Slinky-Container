@@ -11,7 +11,7 @@ BEGIN {
 
     plan qw/no_plan/;
 
-    use_ok 'Slinky::Container';
+    use_ok 'IOC::Slinky::Container';
 }
 
 my $conf;
@@ -49,15 +49,17 @@ $conf = {
         aref1 => [
             1,
             2,
-            'nested_href_here' => {
-                hello => 'world',
-                some_dbh_ref => { _ref => 'dbh1' },
+            { 
+                'nested_href_here' => {
+                    hello => 'world',
+                    some_dbh_ref => { _ref => 'dbh1' },
+                },
             },
         ],
     },
 };
 
-$c = Slinky::Container->new( config => $conf );
+$c = IOC::Slinky::Container->new( config => $conf );
 
 # singleton
 $o = $c->lookup('dbh1');
@@ -74,7 +76,7 @@ $o = $c->lookup('ptr1');
 is $o, $c->lookup('dbh1'), 'ref-to-objects';
 
 $o = $c->lookup('aref1');
-is $o->[2]->{some_dbh_ref}, $c->lookup('dbh1'), 'nested-ref-to-objects';
+is $o->[2]->{nested_href_here}->{some_dbh_ref}, $c->lookup('dbh1'), 'nested-ref-to-objects';
 
 pass "done";
 
