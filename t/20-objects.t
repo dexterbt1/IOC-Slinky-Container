@@ -1,26 +1,16 @@
-{
-    package Item;
-    use Moose;
-    no Moose;
-}
-{
-    package Car;
-    use Moose;
-    has 'brand'     => ( is => 'rw', isa => 'Str', required => 1 );
-    has 'type'      => ( is => 'rw', isa => 'Str' );
-    has 'model'     => ( is => 'rw', isa => 'Str' );
-    has 'year'      => ( is => 'rw', isa => 'Int' );
-    has 'test_item' => ( is => 'rw', isa => 'Item' );
-    no Moose;
-}
 use strict;
 package main;
-use Test::More qw/no_plan/;
+use Test::More;
 use Test::Exception;
+use Class::Load ':all';
 
 BEGIN {
+    try_load_class('Moose')
+       or plan skip_all => "Moose required to run these tests";
+    plan qw/no_plan/;
     use_ok 'IOC::Slinky::Container';
     use_ok 'YAML';
+    require 't/objects1.pm';
 }
 
 my $conf;
