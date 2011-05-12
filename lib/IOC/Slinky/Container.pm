@@ -117,15 +117,129 @@ __END__
 
 =head1 NAME
 
-IOC::Slinky::Container - an alternative dependency-injection container
+IOC::Slinky::Container - a minimalist dependency-injection container
 
 =head1 SYNOPSIS
 
+    # in myapp.yml
+    ---
+    container:
+        db_dsn: "DBI:mysql:database=myapp"
+        db_user: "myapp"
+        db_pass: "myapp"
+        logger:
+            _class: FileLogger
+            _constructor_args:
+                filename: "/var/log/myapp/debug.log"
+        myapp:
+            _class: "MyApp"
+            _constructor_args:
+                dbh:
+                    _class: "DBI"
+                    _constructor: "connect"
+                    _constructor_args:
+                        - { _ref => "db_dsn" }
+                        - { _ref => "db_user" }
+                        - { _ref => "db_pass" }
+                        - { RaiseError => 1 }
+                logger:
+                    _ref: logger
+
+    # in myapp.pl
+    # ...
     use IOC::Slinky::Container;
-    use YAML;
+    use YAML qw/LoadFile/;
+
+    my $c = IOC::Slinky::Container->new( config => LoadFile('myapp.yml') );
+    my $app = $c->lookup('myapp');
+    $app->run;
 
 
 =head1 DESCRIPTION
+
+This module aims to be a transparent and simple dependency-injection (DI) 
+container; usually preconfigured from a configuration file.
+
+A DI-container is a special object used to load and configure other 
+components/objects. Each object can then be globally resolved
+using a unique lookup id. 
+
+For more information about the benefits of the technique, see 
+L<Dependency Injection|http://en.wikipedia.org/wiki/Dependency_Injection>.
+
+=head1 METHODS
+
+=over
+
+=item CLASS->new( config => $conf )
+
+Returns an container instance based on the configuration specified
+by the hashref C<$conf>. See L</CONFIGURATION> for details.
+
+=item $container->lookup($key)
+
+Returns the C<$obj> if C<$key> lookup id is found in the container,
+otherwise it returns undef.
+
+=back
+
+=head1 CONFIGURATION
+
+=head3 Rules
+
+=over
+
+The configuration should be a plain hash reference.
+
+A single top-level key C<container> should be a hash reference;
+where its keys will act as global namespace for all objects to be resolved.
+
+    # an empty container
+    $c = IOC::Slinky::Container->new( 
+        config => {
+            container => {
+            }
+        }
+    );
+
+A container value can be one of the following:
+
+=item Constructed Object
+
+=item Reference
+
+=item Literal
+
+    # literals
+    $c = IOC::Slinky::Container->new( 
+        config => {
+            container => {
+                null        => undef,
+                greeting    => "Hello World",
+                pi          => 3.1416,
+                plain_href  => { a => 1 },
+                plain_aref  => [ 1, 2, 3 ],
+            }
+        }
+    );
+
+=back
+
+=head3 Recommended Practices
+
+=over
+
+L<IOC::Slinky::Container>'s configuration is simply a hash-reference 
+with a specific structure. It can come from virtually anywhere.
+Our recommended usage however is to externalize the configuration 
+(e.g. in a file), and to use L<YAML> (for conciseness and ease-of-editing).
+
+    use IOC::Slinky::Container;
+    use YAML qw/LoadFile/;
+    my $c = IOC::Slinky::Container->new( config => LoadFile("/etc/myapp.yml") );
+    # ...
+
+=back
 
 =head1 SEE ALSO
 
@@ -135,9 +249,15 @@ L<IOC> - the ancestor of L<Bread::Board>
 
 L<http://en.wikipedia.org/wiki/Dependency_Injection>
 
+L<YAML>
+
+=head1 AUTHOR
+
+Dexter Tad-y, <dtady@cpan.org>
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2011 by Dexter B. Tad-y
+Copyright 2011 by Dexter Tad-y
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
