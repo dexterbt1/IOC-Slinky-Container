@@ -1,4 +1,4 @@
-package IOC::Slinky::Container::Item::Literal;
+package IOC::Slinky::Container::Item::Native;
 use strict;
 use Scalar::Util qw/weaken refaddr/;
 

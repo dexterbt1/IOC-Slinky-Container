@@ -1,7 +1,7 @@
 package IOC::Slinky::Container;
 use strict;
 use IOC::Slinky::Container::Item::Ref;
-use IOC::Slinky::Container::Item::Literal;
+use IOC::Slinky::Container::Item::Native;
 use IOC::Slinky::Container::Item::Constructed;
 use Carp ();
 
@@ -72,7 +72,7 @@ sub wire {
                     }
                     $self->wire($v->{$hk});
                 }
-                $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
+                $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
             }
         }
         elsif (ref($v) eq 'ARRAY') {
@@ -81,16 +81,16 @@ sub wire {
             for(0..$count) {
                 $self->wire($v->[$_]);
             }
-            $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
+            $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
         }
         else {
             # other ref types
-            $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
+            $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
         }
     }
     else {
         # literal
-        $oinst = tie $v, 'IOC::Slinky::Container::Item::Literal', $v;
+        $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
     }
 
     if (scalar @k_aliases) {
@@ -117,7 +117,7 @@ __END__
 
 =head1 NAME
 
-IOC::Slinky::Container - a minimalist dependency-injection container
+IOC::Slinky::Container - an alternative dependency-injection container
 
 =head1 SYNOPSIS
 
@@ -157,8 +157,8 @@ IOC::Slinky::Container - a minimalist dependency-injection container
 
 =head1 DESCRIPTION
 
-This module aims to be a transparent and simple dependency-injection (DI) 
-container; usually preconfigured from a configuration file.
+This module aims to be a (1) transparent and (2) simple dependency-injection (DI) 
+container; and usually preconfigured from a configuration file.
 
 A DI-container is a special object used to load and configure other 
 components/objects. Each object can then be globally resolved
@@ -224,7 +224,7 @@ These are native Perl data structures.
 
 These are objects/values returned via a class method call, 
 typically used for object construction. A constructed 
-object is specified by a hash reference with special
+object is specified by a hashref with special
 meta fields:
 
 C<_class> = when present, the container then treats 
@@ -236,7 +236,7 @@ defaults to "new"
 
 C<_constructor_args> = optional, can be a scalar, hashref or an arrayref.
 Hashrefs and arrayrefs are dereferenced as hashes and lists respectively. 
-Scalar values are passed as-is.
+Scalar values are passed as-is. Nesting is allowed.
 
 C<_singleton> = optional, defaults to 1, upon lookup, the 
 object is instantiated once and only once in the lifetime
@@ -246,7 +246,7 @@ C<_lookup_id> = optional, alias of this object.
 
 The rest of the hashref keys will also be treated as method calls, 
 useful for attribute/setters initialization immediately after
-the constructor was called.
+the constructor was called. (I<Setter Injection>)
 
     $c = IOC::Slinky::Container->new( 
         config => {
@@ -342,6 +342,14 @@ Our recommended usage then is to externalize the configuration
     my $c = IOC::Slinky::Container->new( config => LoadFile("/etc/myapp.yml") );
     # ...
 
+As a best practice, L<IOC::Slinky::Container> should NOT be used as a
+service locator (see L<Service Locator Pattern|http://en.wikipedia.org/wiki/Service_locator_pattern>).
+The container should only be referenced at the integration/top-level
+code. Most of your modules/classes should not even see or bother about 
+the container in the first place. The goal is to have a modular, pluggable,
+reusable set of classes.
+
+
 =back
 
 =head1 SEE ALSO
@@ -350,9 +358,11 @@ L<Bread::Broad> - a Moose-based DI framework
 
 L<IOC> - the ancestor of L<Bread::Board>
 
+L<Peco::Container> - another DI container
+
 L<http://en.wikipedia.org/wiki/Dependency_Injection>
 
-L<YAML>
+L<YAML> - for externalized configuration syntax
 
 =head1 AUTHOR
 
