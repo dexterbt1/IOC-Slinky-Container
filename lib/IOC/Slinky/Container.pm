@@ -1,9 +1,12 @@
 package IOC::Slinky::Container;
 use strict;
+use warnings;
 use IOC::Slinky::Container::Item::Ref;
 use IOC::Slinky::Container::Item::Native;
 use IOC::Slinky::Container::Item::Constructed;
 use Carp ();
+
+our $VERSION = '0.1000';
 
 sub new {
     my ($class, %args) = @_;
