@@ -185,9 +185,7 @@ otherwise it returns undef.
 
 =head1 CONFIGURATION
 
-=head3 Rules
-
-=over
+=head2 Rules
 
 The configuration should be a plain hash reference.
 
@@ -204,13 +202,12 @@ where its keys will act as global namespace for all objects to be resolved.
 
 A container value can be one of the following:
 
-=item Constructed Object
+=over
 
-=item Reference
+=item Native
 
-=item Literal
+These are native Perl data structures.
 
-    # literals
     $c = IOC::Slinky::Container->new( 
         config => {
             container => {
@@ -223,16 +220,122 @@ A container value can be one of the following:
         }
     );
 
+=item Constructed Object
+
+These are objects/values returned via a class method call, 
+typically used for object construction. A constructed 
+object is specified by a hash reference with special
+meta fields:
+
+C<_class> = when present, the container then treats 
+this hashref as a constructed object spec. Otherwise 
+this hash reference will be treated as a native value.
+
+C<_constructor> = optional, overrides the method name to call,
+defaults to "new"
+
+C<_constructor_args> = optional, can be a scalar, hashref or an arrayref.
+Hashrefs and arrayrefs are dereferenced as hashes and lists respectively. 
+Scalar values are passed as-is.
+
+C<_singleton> = optional, defaults to 1, upon lookup, the 
+object is instantiated once and only once in the lifetime
+of the container.
+
+C<_lookup_id> = optional, alias of this object.
+
+The rest of the hashref keys will also be treated as method calls, 
+useful for attribute/setters initialization immediately after
+the constructor was called.
+
+    $c = IOC::Slinky::Container->new( 
+        config => {
+            container => {
+                # constructor injection
+                dbh => {
+                    _class              => "DBI",
+                    _constructor        => "connect",
+                    _constructor_args   => [
+                        "DBD:SQLite:dbname=/tmp/my.db",
+                        "user",
+                        "pass",
+                        { RaiseError => 1 },
+                    ],
+                },
+                # setter injection
+                y2k => {
+                    _singleton          => 0,
+                    _class              => "DateTime",
+                    year                => 2000,
+                    month               => 1,
+                    day                 => 1,
+                },
+            }
+        }
+    );
+    
+    my $dbh = $c->lookup('dbh');
+
+    # is roughly equivalent to (though this is a singleton):
+    # my $dbh = DBI->connect(
+    #   "DBI:SQlite:dbname=/tmp/my.db",
+    #   "user",
+    #   "pass",
+    #   { RaiseError => 1 }
+    # );
+
+    my $y2k = $c->lookup('y2k');
+
+    # is equivalent to:
+    # my $y2k = DateTime->new;
+    # $y2k->year( 2000 );
+    # $y2k->month( 1 );
+    # $y2k->day( 1 );
+
+=item Reference
+
+References are "pointers" to the globally accessible container values.
+References are defined by a hashref with a special meta field C<_ref>,
+the value of which will be used to lookup when requested.
+
+    $c = IOC::Slinky::Container->new( 
+        config => {
+            container => {
+                dsn     => "DBI:mysql:database=myapp",
+                user    => "myapp",
+                pass    => "myapp_password",
+                dbh     => {
+                    _class => "DBI",
+                    _constructor => "connect",
+                    _constructor_args => [
+                        { _ref => "dsn" },
+                        { _ref => "user" },
+                        { _ref => "pass" },
+                    ],
+                }, 
+            }
+        }
+    );
+
+    my $dbh = $c->lookup('dbh');
+    # is roughly equivalent to:
+    # $dbh = DBI->connect( 
+    #   $c->lookup('dsn'),
+    #   $c->lookup('user'),
+    #   $c->lookup('pass'),
+    # );
+    
+
 =back
 
-=head3 Recommended Practices
+=head2 Recommended Practices
 
 =over
 
 L<IOC::Slinky::Container>'s configuration is simply a hash-reference 
 with a specific structure. It can come from virtually anywhere.
-Our recommended usage however is to externalize the configuration 
-(e.g. in a file), and to use L<YAML> (for conciseness and ease-of-editing).
+Our recommended usage then is to externalize the configuration 
+(e.g. in a file), and to use L<YAML> for conciseness and ease-of-editing.
 
     use IOC::Slinky::Container;
     use YAML qw/LoadFile/;
