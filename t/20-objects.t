@@ -58,6 +58,13 @@ container:
         _constructor_args:
             brand: "Test"
         test_item: { _ref: some_item }
+
+    ctor_passthru:
+        _class: "NonMooseThing"
+        _constructor_passthru: 1
+        _constructor_args:
+            - name: "FooBar"
+              key2: 1234  
             
 YML
 
@@ -96,6 +103,10 @@ isa_ok $o->test_item, 'Item';
 # ref in setter
 $o = $c->lookup('ref_setter');
 is $o->test_item, $c->lookup('some_item');
+
+$o = $c->lookup('ctor_passthru');
+is $o->{name}, 'FooBar';
+is $o->{key2}, 1234;
 
 pass "done";
 

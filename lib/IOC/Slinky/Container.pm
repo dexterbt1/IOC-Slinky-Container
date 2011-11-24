@@ -30,13 +30,15 @@ sub configure {
         or Carp::croak("Expected 'container' key");
     my $container = delete $conf->{'container'};
     foreach my $k (keys %$container) {
+        # skip existing keys 
+        next if (exists $self->{typeof}->{$k});
         my $v = delete $container->{$k};
-        $self->wire($v, $k);
+        $self->wire($container, $v, $k);
     }
 }
 
 sub wire {
-    my ($self, $v, $k) = @_;
+    my ($self, $container, $v, $k) = @_;
     my $oinst;
     my @k_aliases = ();
     if (defined $k) {
@@ -46,25 +48,32 @@ sub wire {
         if (ref($v) eq 'HASH') {
             if (exists $v->{'_ref'}) {
                 # reference to existing types
-                $oinst = tie $_[1], 'IOC::Slinky::Container::Item::Ref', $self, $v->{'_ref'};
+                my $lookup = $v->{'_ref'};
+                # look-ahead: if the ref points to a lookup_id NOT YET in lookup table BUT still in the config
+                if ((not exists $self->{typeof}->{$lookup}) and (exists $container->{$lookup})) {
+                    my $vv = delete $container->{$lookup};
+                    $self->wire($container, $vv, $lookup);
+                }
+                $oinst = tie $_[2], 'IOC::Slinky::Container::Item::Ref', $self, $v->{'_ref'};
             }
             elsif (exists $v->{'_class'}) {
                 # object!
                 my $ns = delete $v->{'_class'};
                 my $new = delete $v->{'_constructor'} || 'new';
                 my $ctor = delete $v->{'_constructor_args'} || [ ];
+                my $ctor_passthru = delete $v->{'_constructor_passthru'} || 0;
 
                 my $singleton = 1;
                 if (exists $v->{'_singleton'}) {
                     $singleton = delete $v->{'_singleton'};
                 }
-                $self->wire($ctor);
+                $self->wire($container, $ctor);
 
                 my $alias = delete $v->{'_lookup_id'};
                 if (defined $alias) {
                     push @k_aliases, $alias;
                 }
-                $oinst = tie $_[1], 'IOC::Slinky::Container::Item::Constructed', $self, $ns, $new, $ctor, $v, $singleton;
+                $oinst = tie $_[2], 'IOC::Slinky::Container::Item::Constructed', $self, $ns, $new, $ctor, $ctor_passthru, $v, $singleton;
             }
             else {
                 # plain hashref ... traverse first
@@ -73,7 +82,7 @@ sub wire {
                         push @k_aliases, delete($v->{$hk});
                         next;
                     }
-                    $self->wire($v->{$hk});
+                    $self->wire($container, $v->{$hk});
                 }
                 $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
             }
@@ -82,7 +91,7 @@ sub wire {
             # arrayref are to be traversed for refs
             my $count = scalar(@$v)-1;
             for(0..$count) {
-                $self->wire($v->[$_]);
+                $self->wire($container, $v->[$_]);
             }
             $oinst = tie $v, 'IOC::Slinky::Container::Item::Native', $v;
         }
@@ -240,6 +249,10 @@ defaults to "new"
 C<_constructor_args> = optional, can be a scalar, hashref or an arrayref.
 Hashrefs and arrayrefs are dereferenced as hashes and lists respectively. 
 Scalar values are passed as-is. Nesting is allowed.
+
+C<_constructor_passthru> = optional, boolean, default to 0 (false)
+when this is TRUE, pass the _constructor_args as is without doing any
+automatic dereference of hashrefs and arrayrefs.
 
 C<_singleton> = optional, defaults to 1, upon lookup, the 
 object is instantiated once and only once in the lifetime

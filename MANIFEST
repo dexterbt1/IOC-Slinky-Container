@@ -11,3 +11,5 @@ t/10-basic.t
 t/20-objects.t
 t/21-dbi.t
 t/objects1.pm
+Makefile.PL
+META.yml

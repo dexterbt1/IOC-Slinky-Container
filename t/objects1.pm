@@ -13,5 +13,18 @@
     has 'test_item' => ( is => 'rw', isa => 'Item' );
     no Moose;
 }
+{
+    package NonMooseThing;
+    use strict;
+    sub new {
+        my ($CLASS, $args) = @_;
+        my $self = bless { }, $CLASS;
+        (ref($args) eq 'ARRAY')
+            or die "args not an ARRAYREF";
+        $self->{name} = $args->[0]->{name};
+        $self->{key2} = $args->[0]->{key2};
+        return $self;
+    }
+}
 
 1;
