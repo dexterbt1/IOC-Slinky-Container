@@ -13,3 +13,4 @@ t/21-dbi.t
 t/objects1.pm
 Makefile.PL
 META.yml
+META.json

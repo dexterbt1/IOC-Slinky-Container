@@ -1,0 +1,12 @@
+_build/
+blib/
+Build$
+MANIFEST.SKIP$
+MYMETA.json
+MYMETA.yml
+.*\.tar.(gz|bz2)
+\.git/
+\.gitignore
+.*\.swp
+.*\.swo
+work.*\.vim

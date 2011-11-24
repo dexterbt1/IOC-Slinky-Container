@@ -6,7 +6,7 @@ use IOC::Slinky::Container::Item::Native;
 use IOC::Slinky::Container::Item::Constructed;
 use Carp ();
 
-our $VERSION = '0.1000';
+our $VERSION = '0.1001';
 
 sub new {
     my ($class, %args) = @_;
