@@ -21,7 +21,7 @@ name: IOC-Slinky-Container
 provides:
   IOC::Slinky::Container:
     file: lib/IOC/Slinky/Container.pm
-    version: 0.1000
+    version: 0.1001
   IOC::Slinky::Container::Item::Constructed:
     file: lib/IOC/Slinky/Container/Item/Constructed.pm
     version: 0
